@@ -1,8 +1,12 @@
-# BME 280 device driver for Micropython
+# BME 280 device driver with Micropython support
 
 [Project website](https://bues.ch/)
 
 [Git repository](https://bues.ch/cgit/bme280.git)
+
+This driver runs on regular Python and on Micropython.
+
+It has support for both I2C and SPI bus.
 
 # License
 

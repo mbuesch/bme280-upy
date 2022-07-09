@@ -1,6 +1,6 @@
 #
 # BME280 device driver
-# Copyright (c) 2020 Michael Büsch <m@bues.ch>
+# Copyright (c) 2020-2022 Michael Büsch <m@bues.ch>
 #
 # The reference and base for this software is the public document
 #   BME280 - Data sheet
@@ -40,7 +40,7 @@ if isMicropython:
     from micropython import const
 else:
     import asyncio
-    class micropython(object):
+    class micropython:
         const = native = viper = lambda x: x
     const = micropython.const
 
@@ -50,7 +50,7 @@ class BME280Error(Exception):
     __slots__ = (
     )
 
-class BME280I2C(object):
+class BME280I2C:
     """BME280 low level I2C wrapper.
     """
     __slots__ = (
@@ -111,7 +111,7 @@ class BME280I2C(object):
         except Exception as e:
             raise BME280Error("BME280: I2C error: %s" % str(e))
 
-class BME280SPI(object):
+class BME280SPI:
     """BME280 low level SPI wrapper.
     """
     __slots__ = (
@@ -269,7 +269,7 @@ CALC_FLOAT          = const(0)
 CALC_INT32          = const(1)
 CALC_INT64          = const(2)
 
-class BME280(object):
+class BME280:
     """BME280 device driver.
     """
     __slots__ = (
