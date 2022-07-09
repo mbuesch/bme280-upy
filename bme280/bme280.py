@@ -69,9 +69,9 @@ class BME280I2C:
                     "freq"  : i2cFreq * 1000,
                 }
                 if isinstance(i2cBus, dict): # Software I2C
-                    opts["scl"] = Pin(spiBus["scl"], mode=Pin.OPEN_DRAIN, value=1)
-                    opts["sda"] = Pin(spiBus["sda"], mode=Pin.OPEN_DRAIN, value=1)
-                    i2cBus = opts.get("index", -1)
+                    opts["scl"] = Pin(i2cBus["scl"], mode=Pin.OPEN_DRAIN, value=1)
+                    opts["sda"] = Pin(i2cBus["sda"], mode=Pin.OPEN_DRAIN, value=1)
+                    i2cBus = i2cBus.get("index", -1)
                 self.__i2c = I2C(i2cBus, **opts)
             else:
                 from smbus import SMBus
@@ -136,7 +136,7 @@ class BME280SPI:
                     opts["sck"]  = Pin(spiBus["sck"], mode=Pin.OUT, value=0)
                     opts["mosi"] = Pin(spiBus["mosi"], mode=Pin.OUT, value=0)
                     opts["miso"] = Pin(spiBus["miso"], mode=Pin.IN)
-                    spiBus = opts.get("index", -1)
+                    spiBus = spiBus.get("index", -1)
                 self.__spi = SPI(spiBus, **opts)
                 self.__cs = Pin(spiCS, mode=Pin.OUT, value=1)
             else:
