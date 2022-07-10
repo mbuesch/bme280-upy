@@ -1,4 +1,4 @@
-# BME-280 sensor device driver with Micropython support
+# BME-280 sensor device driver with Micropython support (I2C + SPI)
 
 [Project website](https://bues.ch/)
 
