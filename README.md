@@ -2,7 +2,7 @@
 
 [Project website](https://bues.ch/)
 
-[Git repository](https://bues.ch/cgit/bme280.git)
+[Git repository](https://bues.ch/cgit/bme280-upy.git)
 
 This driver runs on regular Python and on Micropython.
 
