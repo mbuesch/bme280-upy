@@ -72,6 +72,8 @@ class BME280I2C:
                     opts["scl"] = Pin(i2cBus["scl"], mode=Pin.OPEN_DRAIN, value=1)
                     opts["sda"] = Pin(i2cBus["sda"], mode=Pin.OPEN_DRAIN, value=1)
                     i2cBus = i2cBus.get("index", -1)
+                else:
+                    assert i2cBus >= 0
                 if i2cBus < 0:
                     self.__i2c = SoftI2C(**opts)
                 else:
@@ -140,6 +142,8 @@ class BME280SPI:
                     opts["mosi"] = Pin(spiBus["mosi"], mode=Pin.OUT, value=0)
                     opts["miso"] = Pin(spiBus["miso"], mode=Pin.IN)
                     spiBus = spiBus.get("index", -1)
+                else:
+                    assert spiBus >= 0
                 if spiBus < 0:
                     self.__spi = SoftSPI(**opts)
                 else:
