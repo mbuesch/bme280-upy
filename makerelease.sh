@@ -19,4 +19,5 @@ hook_get_version()
 }
 
 project=bme280-upy
+default_archives=py-sdist-xz
 makerelease "$@"
