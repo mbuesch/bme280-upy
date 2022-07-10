@@ -64,7 +64,7 @@ class BME280I2C:
         self.__micropython = isMicropython
         try:
             if self.__micropython:
-                from machine import I2C, Pin
+                from machine import I2C, SoftI2C, Pin
                 opts = {
                     "freq"  : i2cFreq * 1000,
                 }
@@ -72,7 +72,10 @@ class BME280I2C:
                     opts["scl"] = Pin(i2cBus["scl"], mode=Pin.OPEN_DRAIN, value=1)
                     opts["sda"] = Pin(i2cBus["sda"], mode=Pin.OPEN_DRAIN, value=1)
                     i2cBus = i2cBus.get("index", -1)
-                self.__i2c = I2C(i2cBus, **opts)
+                if i2cBus < 0:
+                    self.__i2c = SoftI2C(**opts)
+                else:
+                    self.__i2c = I2C(i2cBus, **opts)
             else:
                 from smbus import SMBus
                 self.__i2c = SMBus(i2cBus)
@@ -124,7 +127,7 @@ class BME280SPI:
         self.__micropython = isMicropython
         try:
             if self.__micropython:
-                from machine import SPI, Pin
+                from machine import SPI, SoftSPI, Pin
                 opts = {
                     "baudrate"  : spiFreq * 1000,
                     "polarity"  : 0,
@@ -137,7 +140,10 @@ class BME280SPI:
                     opts["mosi"] = Pin(spiBus["mosi"], mode=Pin.OUT, value=0)
                     opts["miso"] = Pin(spiBus["miso"], mode=Pin.IN)
                     spiBus = spiBus.get("index", -1)
-                self.__spi = SPI(spiBus, **opts)
+                if spiBus < 0:
+                    self.__spi = SoftSPI(**opts)
+                else:
+                    self.__spi = SPI(spiBus, **opts)
                 self.__cs = Pin(spiCS, mode=Pin.OUT, value=1)
             else:
                 from spidev import SpiDev
