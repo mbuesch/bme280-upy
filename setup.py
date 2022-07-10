@@ -11,7 +11,7 @@ with open(os.path.join(basedir, "README.md"), "rb") as fd:
 setup(
     name="bme280-upy",
     version="1.0",
-    description="BME 280 device driver with Micropython support",
+    description="BME-280 sensor device driver with Micropython support",
     license="GNU General Public License v2 or later",
     author="Michael Büsch",
     author_email="m@bues.ch",

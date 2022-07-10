@@ -1,4 +1,4 @@
-# BME 280 device driver with Micropython support
+# BME-280 sensor device driver with Micropython support
 
 [Project website](https://bues.ch/)
 
@@ -7,6 +7,26 @@
 This driver runs on regular Python and on Micropython.
 
 It has support for both I2C and SPI bus.
+
+# Example
+
+    import bme280
+
+    try:
+        # Connect to BME-280 via I2C.
+        bme = bme280.BME280(i2cBus=0)
+
+        # Synchronously trigger a MODE_FORCED conversion and return the result.
+        temperature, humidity, pressure = bme.readForced(filter=bme280.FILTER_2,
+                                                         tempOversampling=bme280.OVSMPL_4,
+                                                         humidityOversampling=bme280.OVSMPL_4,
+                                                         pressureOversampling=bme280.OVSMPL_4)
+
+        # Print the result.
+        print(f"{temperature:.1f} *C; {humidity * 100:.1f} % rel. hum.; {pressure / 100:.1f} hPa")
+
+    except bme280.BME280Error as e:
+        print(f"BME280 error: {e}")
 
 # License
 
