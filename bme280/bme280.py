@@ -143,7 +143,7 @@ class BME280SPI:
             if self.__micropython:
                 from machine import SPI, SoftSPI, Pin
                 if spiCS is None:
-                    raise BME280Error("BME280: No spiCS specified.")
+                    raise Exception("No spiCS parameter specified.")
                 if isinstance(spiBus, (SPI, SoftSPI)):
                     self.__spi = spiBus
                 else:
@@ -172,7 +172,7 @@ class BME280SPI:
                     self.__spi = spiBus
                 else:
                     if spiCS is None:
-                        raise BME280Error("BME280: No spiCS specified.")
+                        raise Exception("No spiCS parameter specified.")
                     self.__spi = SpiDev()
                     self.__spi.max_speed_hz = spiFreq * 1000
                     self.__spi.mode = 0b00
