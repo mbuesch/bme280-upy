@@ -8,7 +8,7 @@ This driver runs on regular Python and on Micropython.
 
 It has support for both I2C and SPI bus.
 
-# Example I2C
+# Example: I2C
 
     import bme280
 
@@ -42,7 +42,7 @@ It has support for both I2C and SPI bus.
     except bme280.BME280Error as e:
         print(f"BME280 error: {e}")
 
-# Example SPI
+# Example: SPI
 
     import bme280
 
@@ -73,6 +73,22 @@ It has support for both I2C and SPI bus.
         # Print the result.
         print(f"{temperature:.1f} *C; {humidity * 100:.1f} % rel. hum.; {pressure / 100:.1f} hPa")
 
+    except bme280.BME280Error as e:
+        print(f"BME280 error: {e}")
+
+# Example: Context Manager
+
+The BME280 instance can also be used as Context Manager (Python `with` statement).
+
+    import bme280
+
+    try:
+        with bme280.BME280(i2cBus=0) as bme:
+            temperature, humidity, pressure = bme.readForced(filter=bme280.FILTER_2,
+                                                             tempOversampling=bme280.OVSMPL_4,
+                                                             humidityOversampling=bme280.OVSMPL_4,
+                                                             pressureOversampling=bme280.OVSMPL_4)
+            # ...
     except bme280.BME280Error as e:
         print(f"BME280 error: {e}")
 
