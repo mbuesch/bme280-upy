@@ -390,7 +390,7 @@ class BME280:
     def __readCal(self):
         """Read the calibration data from the device.
         """
-        data = self.__readBurst(_REG_dig_T1, _REG_dig_H1)
+        data = bytes(self.__readBurst(_REG_dig_T1, _REG_dig_H1))
         data += self.__readBurst(_REG_dig_H2, _REG_dig_H6)
 
         def twos(value, bits):
