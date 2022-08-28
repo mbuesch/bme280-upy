@@ -8,19 +8,67 @@ This driver runs on regular Python and on Micropython.
 
 It has support for both I2C and SPI bus.
 
-# Example
+# Example I2C
 
     import bme280
 
     try:
-        # Connect to BME-280 via I2C.
+        # Connect to BME-280 via I2C-0 hardware with default pinning:
         bme = bme280.BME280(i2cBus=0)
+
+        # Alternatively:
+        # Connect to BME-280 via I2C-0 hardware with custom pinning (not supported by all microcontrollers):
+        #bme = bme280.BME280(i2cBus={ "index": 0, "scl": 1, "sda": 0 })
+
+        # Alternatively:
+        # Connect to BME-280 via software I2C with custom pinning (not supported by all microcontrollers):
+        #bme = bme280.BME280(i2cBus={ "scl": 1, "sda": 0 })
+
+        # Alternatively:
+        # Connect to BME-280 via pre-initialized Micropython bus object:
+        #bme = bme280.BME280(i2cBus=machine.I2C(0, ...))
 
         # Synchronously trigger a MODE_FORCED conversion and return the result.
         temperature, humidity, pressure = bme.readForced(filter=bme280.FILTER_2,
                                                          tempOversampling=bme280.OVSMPL_4,
                                                          humidityOversampling=bme280.OVSMPL_4,
                                                          pressureOversampling=bme280.OVSMPL_4)
+
+        # See help(bme280.BME280) for documentation and more methods.
+
+        # Print the result.
+        print(f"{temperature:.1f} *C; {humidity * 100:.1f} % rel. hum.; {pressure / 100:.1f} hPa")
+
+    except bme280.BME280Error as e:
+        print(f"BME280 error: {e}")
+
+# Example SPI
+
+    import bme280
+
+    try:
+        # Connect to BME-280 via SPI-0 hardware with default pinning and pin 5 as chip select:
+        bme = bme280.BME280(spiBus=0, spiCS=5)
+
+        # Alternatively:
+        # Connect to BME-280 via SPI-0 hardware with custom pinning (not supported by all microcontrollers):
+        #bme = bme280.BME280(spiBus={ "index": 0, "sck": 1, "mosi": 2, "miso": 3 }, spiCS=5)
+
+        # Alternatively:
+        # Connect to BME-280 via software SPI with custom pinning (not supported by all microcontrollers):
+        #bme = bme280.BME280(spiBus={ "sck": 1, "mosi": 2, "miso": 3 }, spiCS=5)
+
+        # Alternatively:
+        # Connect to BME-280 via pre-initialized Micropython bus object:
+        #bme = bme280.BME280(spiBus=machine.SPI(0, ...), spiCS=machine.Pin(5, ...))
+
+        # Synchronously trigger a MODE_FORCED conversion and return the result.
+        temperature, humidity, pressure = bme.readForced(filter=bme280.FILTER_2,
+                                                         tempOversampling=bme280.OVSMPL_4,
+                                                         humidityOversampling=bme280.OVSMPL_4,
+                                                         pressureOversampling=bme280.OVSMPL_4)
+
+        # See help(bme280.BME280) for documentation and more methods.
 
         # Print the result.
         print(f"{temperature:.1f} *C; {humidity * 100:.1f} % rel. hum.; {pressure / 100:.1f} hPa")
