@@ -89,7 +89,10 @@ class BME280I2C:
                         self.__i2c = I2C(i2cBus, **opts)
             else:
                 from smbus import SMBus
-                self.__i2c = SMBus(i2cBus)
+                if isinstance(i2cBus, SMBus):
+                    self.__i2c = i2cBus
+                else:
+                    self.__i2c = SMBus(i2cBus)
         except Exception as e:
             raise BME280Error("BME280: I2C error: %s" % str(e))
 
@@ -139,6 +142,8 @@ class BME280SPI:
         try:
             if self.__micropython:
                 from machine import SPI, SoftSPI, Pin
+                if spiCS is None:
+                    raise BME280Error("BME280: No spiCS specified.")
                 if isinstance(spiBus, (SPI, SoftSPI)):
                     self.__spi = spiBus
                 else:
@@ -163,14 +168,19 @@ class BME280SPI:
                 self.__cs = makePin(spiCS, lambda p: Pin(p, mode=Pin.OUT, value=1))
             else:
                 from spidev import SpiDev
-                self.__spi = SpiDev()
-                self.__spi.max_speed_hz = spiFreq * 1000
-                self.__spi.mode = 0b00
-                self.__spi.bits_per_word = 8
-                self.__spi.threewire = False
-                self.__spi.lsbfirst = False
-                self.__spi.cshigh = False
-                self.__spi.open(spiBus, spiCS)
+                if isinstance(spiBus, SpiDev):
+                    self.__spi = spiBus
+                else:
+                    if spiCS is None:
+                        raise BME280Error("BME280: No spiCS specified.")
+                    self.__spi = SpiDev()
+                    self.__spi.max_speed_hz = spiFreq * 1000
+                    self.__spi.mode = 0b00
+                    self.__spi.bits_per_word = 8
+                    self.__spi.threewire = False
+                    self.__spi.lsbfirst = False
+                    self.__spi.cshigh = False
+                    self.__spi.open(spiBus, spiCS)
         except Exception as e:
             raise BME280Error("BME280: SPI error: %s" % str(e))
 
@@ -354,8 +364,6 @@ class BME280:
         if i2cBus is not None:
             self.__bus = BME280I2C(i2cBus, i2cAddr, busFreq)
         elif spiBus is not None:
-            if spiCS is None:
-                raise BME280Error("BME280: No spiCS specified.")
             self.__bus = BME280SPI(spiBus, spiCS, busFreq)
         else:
             raise BME280Error("BME280: No bus configured.")
