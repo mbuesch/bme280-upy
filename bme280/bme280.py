@@ -391,7 +391,7 @@ class BME280:
         """Read the calibration data from the device.
         """
         data = bytes(self.__readBurst(_REG_dig_T1, _REG_dig_H1))
-        data += self.__readBurst(_REG_dig_H2, _REG_dig_H6)
+        data += bytes(self.__readBurst(_REG_dig_H2, _REG_dig_H6))
 
         def twos(value, bits):
             """Convert a raw value represented in two's complement to signed Python int.
