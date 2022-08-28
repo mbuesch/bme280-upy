@@ -50,6 +50,12 @@ class BME280Error(Exception):
     __slots__ = (
     )
 
+def makePin(pin, constructor):
+    from machine import Pin
+    if isinstance(pin, Pin):
+        return pin
+    return constructor(pin)
+
 class BME280I2C:
     """BME280 low level I2C wrapper.
     """
@@ -65,19 +71,22 @@ class BME280I2C:
         try:
             if self.__micropython:
                 from machine import I2C, SoftI2C, Pin
-                opts = {
-                    "freq"  : i2cFreq * 1000,
-                }
-                if isinstance(i2cBus, dict): # Software I2C
-                    opts["scl"] = Pin(i2cBus["scl"], mode=Pin.OPEN_DRAIN, value=1)
-                    opts["sda"] = Pin(i2cBus["sda"], mode=Pin.OPEN_DRAIN, value=1)
-                    i2cBus = i2cBus.get("index", -1)
+                if isinstance(i2cBus, (I2C, SoftI2C)):
+                    self.__i2c = i2cBus
                 else:
-                    assert i2cBus >= 0
-                if i2cBus < 0:
-                    self.__i2c = SoftI2C(**opts)
-                else:
-                    self.__i2c = I2C(i2cBus, **opts)
+                    opts = {
+                        "freq"  : i2cFreq * 1000,
+                    }
+                    if isinstance(i2cBus, dict):
+                        opts["scl"] = makePin(i2cBus["scl"], lambda p: Pin(p, mode=Pin.OPEN_DRAIN, value=1))
+                        opts["sda"] = makePin(i2cBus["sda"], lambda p: Pin(p, mode=Pin.OPEN_DRAIN, value=1))
+                        i2cBus = i2cBus.get("index", -1)
+                    else:
+                        assert i2cBus >= 0
+                    if i2cBus < 0:
+                        self.__i2c = SoftI2C(**opts)
+                    else:
+                        self.__i2c = I2C(i2cBus, **opts)
             else:
                 from smbus import SMBus
                 self.__i2c = SMBus(i2cBus)
@@ -130,25 +139,28 @@ class BME280SPI:
         try:
             if self.__micropython:
                 from machine import SPI, SoftSPI, Pin
-                opts = {
-                    "baudrate"  : spiFreq * 1000,
-                    "polarity"  : 0,
-                    "phase"     : 0,
-                    "bits"      : 8,
-                    "firstbit"  : SPI.MSB,
-                }
-                if isinstance(spiBus, dict): # Software SPI
-                    opts["sck"]  = Pin(spiBus["sck"], mode=Pin.OUT, value=0)
-                    opts["mosi"] = Pin(spiBus["mosi"], mode=Pin.OUT, value=0)
-                    opts["miso"] = Pin(spiBus["miso"], mode=Pin.IN)
-                    spiBus = spiBus.get("index", -1)
+                if isinstance(spiBus, (SPI, SoftSPI)):
+                    self.__spi = spiBus
                 else:
-                    assert spiBus >= 0
-                if spiBus < 0:
-                    self.__spi = SoftSPI(**opts)
-                else:
-                    self.__spi = SPI(spiBus, **opts)
-                self.__cs = Pin(spiCS, mode=Pin.OUT, value=1)
+                    opts = {
+                        "baudrate"  : spiFreq * 1000,
+                        "polarity"  : 0,
+                        "phase"     : 0,
+                        "bits"      : 8,
+                        "firstbit"  : SPI.MSB,
+                    }
+                    if isinstance(spiBus, dict): # Software SPI
+                        opts["sck"]  = makePin(spiBus["sck"], lambda p: Pin(p, mode=Pin.OUT, value=0))
+                        opts["mosi"] = makePin(spiBus["mosi"], lambda p: Pin(p, mode=Pin.OUT, value=0))
+                        opts["miso"] = makePin(spiBus["miso"], lambda p: Pin(p, mode=Pin.IN))
+                        spiBus = spiBus.get("index", -1)
+                    else:
+                        assert spiBus >= 0
+                    if spiBus < 0:
+                        self.__spi = SoftSPI(**opts)
+                    else:
+                        self.__spi = SPI(spiBus, **opts)
+                self.__cs = makePin(spiCS, lambda p: Pin(p, mode=Pin.OUT, value=1))
             else:
                 from spidev import SpiDev
                 self.__spi = SpiDev()
@@ -322,12 +334,18 @@ class BME280:
              calc=(CALC_INT32 if isMicropython else CALC_FLOAT),
              **kwargs):
         """Initialize the device driver.
-        'i2cBus': I2C hardware bus index to use for communication with the device
-                  or dict {"scl" : 1, "sda" : 2} of pin numbers for software I2C.
+        'i2cBus': I2C hardware bus index to use for communication with the device.
+                  Or dict { "scl": 1, "sda": 2 } of pin numbers for software I2C.
+                  Or dict { "index": 0, "scl": 1, "sda": 2 } for hardware I2C-0 with different pinning.
+                  Or a fully initialized Micropython I2C/SoftI2C object.
+                  Pin numbers may either be integers or Micropython Pin objects.
         'i2cAddr': I2C address of the device. May be 0x76 or 0x77.
-        'spiBus': SPI hardware bus index to use for communication with the device
-                  or dict {"sck" : 1, "mosi" : 2, "miso" : 3} of pin numbers for software SPI.
-        'spiCS': SPI chip select identifier number or pin number.
+        'spiBus': SPI hardware bus index to use for communication with the device.
+                  Or dict { "sck": 1, "mosi": 2, "miso": 3 } of pin numbers for software SPI.
+                  Or dict { "index": 0, "sck": 1, "mosi": 2, "miso": 3 } for hardware SPI-0 with different pinning.
+                  Or a fully initialized Micropython SPI/SoftSPI object.
+                  Pin numbers may either be integers or Micropython Pin objects.
+        'spiCS': SPI chip select identifier number or pin number or Micropython Pin object.
         'busFreq': I2C/SPI bus clock frequency, in kHz.
         'calc': Calculation mode for compensation functions. One of CALC_...
         Additional keyword arguments are passed to start().
