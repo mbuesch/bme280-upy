@@ -773,15 +773,4 @@ class BME280:
         """
         self.__bus.write(reg, (value & 0xFF).to_bytes(1, "little"))
 
-if __name__ == "__main__":
-    import time
-    with BME280(i2cBus=1) as bme:
-        while True:
-            t, h, p = bme.readForced(filter=FILTER_4,
-                                     tempOversampling=OVSMPL_4,
-                                     humidityOversampling=OVSMPL_16,
-                                     pressureOversampling=OVSMPL_4)
-            print("t=%.2f  h=%.2f  p=%.1f" % (t, h * 1e2, p * 1e-2))
-            time.sleep(0.5)
-
 # vim: ts=4 sw=4 expandtab
