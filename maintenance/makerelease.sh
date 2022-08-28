@@ -1,7 +1,8 @@
 #!/bin/sh
 
-srcdir="$(dirname "$0")"
-[ "$(echo "$srcdir" | cut -c1)" = '/' ] || srcdir="$PWD/$srcdir"
+srcdir="$(realpath -e "$0" | xargs dirname)"
+
+srcdir="$srcdir/.."
 
 die() { echo "$*"; exit 1; }
 
