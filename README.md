@@ -1,10 +1,10 @@
-# BME-280 sensor device driver with Micropython support (I2C + SPI)
+# BME-280 sensor device driver with Micropython and Linux support (I2C + SPI)
 
 [Project website](https://bues.ch/)
 
 [Git repository](https://bues.ch/cgit/bme280-upy.git)
 
-This driver runs on regular Python and on Micropython.
+This driver runs on Micropython and on regular Python (e.g. Raspberry Pi or other Linux devices).
 
 It has support for both I2C and SPI bus.
 
