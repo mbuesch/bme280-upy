@@ -483,7 +483,7 @@ class BME280:
         asyncio.run(self.resetAsync())
 
     async def startAsync(self,
-                         mode=MODE_SLEEP,
+                         mode,
                          standbyTime=T_SB_125ms,
                          filter=FILTER_OFF,
                          tempOversampling=OVSMPL_1,
