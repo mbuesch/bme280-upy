@@ -1,5 +1,6 @@
 from unittest import TestCase
 from unittest.mock import patch
+import binascii
 import bme280
 import machine
 import asyncio as uasyncio
@@ -19,9 +20,9 @@ class SpiDevMock:
         if reg == 0xD0 and length == 1 + 1: # id
             return b'\0' + bytes([ 0x60, ])
         if reg == 0x88 and length == 26 + 1: # cal burst 1
-            return b'\0' + bytes([ 0x01, ] * (length - 1))
+            return b'\0' + binascii.unhexlify("04719f673200198a4dd6d00bc419fafff9ff0c3020d18813004b")
         if reg == 0xE1 and length == 7 + 1: # cal burst 2
-            return b'\0' + bytes([ 0x01, ] * (length - 1))
+            return b'\0' + binascii.unhexlify("5a01001626031e")
         if reg == 0xF7 and length == 8 + 1: # value burst
             return b'\0' + bytes([ 0x01, 0x02, 0x03,  # press
                                    0x74, 0x75, 0x76,  # temp
