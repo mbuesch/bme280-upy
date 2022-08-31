@@ -2,6 +2,7 @@ from unittest import TestCase
 from unittest.mock import patch
 import bme280
 import machine
+import asyncio as uasyncio
 
 # spidev.SpiDev
 class SpiDevMock:
@@ -122,5 +123,11 @@ class Test_SPIDummy(TestCase):
                                               miso=machine.Pin(23, mode=machine.Pin.IN)),
                            spiCS=machine.Pin(2, mode=machine.Pin.OUT, value=1)) as bme:
             t, h, p = bme.readForced()
+
+        # Test async
+        async def coroutine_():
+            async with bme280.BME280(spiBus=42, spiCS=2) as bme:
+                t, h, p = await bme.readForcedAsync()
+        uasyncio.run(coroutine_())
 
 # vim: ts=4 sw=4 expandtab

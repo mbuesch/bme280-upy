@@ -2,6 +2,7 @@ from unittest import TestCase
 from unittest.mock import patch
 import bme280
 import machine
+import asyncio as uasyncio
 
 # smbus.SMBus
 class SMBusMock:
@@ -95,5 +96,11 @@ class Test_I2CDummy(TestCase):
                                               sda=machine.Pin(12, mode=machine.Pin.OPEN_DRAIN, value=1),
                                               freq=100000)) as bme:
             t, h, p = bme.readForced()
+
+        # Test async
+        async def coroutine_():
+            async with bme280.BME280(i2cBus=42) as bme:
+                t, h, p = await bme.readForcedAsync()
+        uasyncio.run(coroutine_())
 
 # vim: ts=4 sw=4 expandtab

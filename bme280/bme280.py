@@ -307,6 +307,7 @@ class BME280:
     __slots__ = (
         "__calc",
         "__bus",
+        "__resetPending",
         "__cal_dig_T1",
         "__cal_dig_T2",
         "__cal_dig_T3",
@@ -329,21 +330,14 @@ class BME280:
         "__cache_ctrl_hum",
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self,
+                 i2cBus=None,
+                 i2cAddr=0x76,
+                 spiBus=None,
+                 spiCS=None,
+                 busFreq=100,
+                 calc=(CALC_INT32 if isMicropython else CALC_FLOAT)):
         """Create BME280 driver instance.
-        All arguments and keyword arguments are passed to open().
-        """
-        self.open(*args, **kwargs)
-
-    def open(self,
-             i2cBus=None,
-             i2cAddr=0x76,
-             spiBus=None,
-             spiCS=None,
-             busFreq=100,
-             calc=(CALC_INT32 if isMicropython else CALC_FLOAT),
-             **kwargs):
-        """Initialize the device driver.
         'i2cBus': I2C hardware bus index to use for communication with the device.
                   Or dict { "scl": 1, "sda": 2 } of pin numbers for software I2C.
                   Or dict { "index": 0, "scl": 1, "sda": 2 } for hardware I2C-0 with different pinning.
@@ -358,7 +352,6 @@ class BME280:
         'spiCS': SPI chip select identifier number or pin number or Micropython Pin object.
         'busFreq': I2C/SPI bus clock frequency, in kHz.
         'calc': Calculation mode for compensation functions. One of CALC_...
-        Additional keyword arguments are passed to start().
         """
         self.__calc = calc
         if i2cBus is not None:
@@ -367,19 +360,24 @@ class BME280:
             self.__bus = BME280SPI(spiBus, spiCS, busFreq)
         else:
             raise BME280Error("BME280: No bus configured.")
-        self.reset()
-        self.start(**kwargs)
+        self.__resetPending = True
 
-    def close(self):
+    async def closeAsync(self):
         """Shutdown communication to the device.
         """
         if self.__bus:
             try:
-                self.start(mode=MODE_SLEEP)
+                await self.startAsync(mode=MODE_SLEEP)
             except BME280Error:
                 pass
             self.__bus.close()
             self.__bus = None
+        self.__resetPending = True
+
+    def close(self):
+        """Shutdown communication to the device.
+        """
+        asyncio.run(self.closeAsync())
 
     def __enter__(self):
         return self
@@ -391,7 +389,7 @@ class BME280:
         self.close()
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        self.close()
+        await self.closeAsync()
 
     def __readCal(self):
         """Read the calibration data from the device.
@@ -476,19 +474,21 @@ class BME280:
         else:
             raise BME280Error("BME280: status register response incorrect.")
         self.__readCal()
+        self.__resetPending = False
 
     def reset(self):
         """Synchronously call the coroutine resetAsync().
+        See resetAsync() for documentation about behaviour, arguments and return value.
         """
         asyncio.run(self.resetAsync())
 
-    def start(self,
-              mode=MODE_SLEEP,
-              standbyTime=T_SB_125ms,
-              filter=FILTER_OFF,
-              tempOversampling=OVSMPL_1,
-              humidityOversampling=OVSMPL_1,
-              pressureOversampling=OVSMPL_1):
+    async def startAsync(self,
+                         mode=MODE_SLEEP,
+                         standbyTime=T_SB_125ms,
+                         filter=FILTER_OFF,
+                         tempOversampling=OVSMPL_1,
+                         humidityOversampling=OVSMPL_1,
+                         pressureOversampling=OVSMPL_1):
         """Reconfigure the device.
         'mode': Operation mode. MODE_SLEEP, MODE_FORCED or MODE_NORMAL.
         'standbyTime': Standby time. One of T_SB_...
@@ -500,6 +500,8 @@ class BME280:
         """
         if not self.__bus:
             raise BME280Error("BME280: Device not opened.")
+        if self.__resetPending:
+            await self.resetAsync()
         self.__write_config(t_sb=standbyTime,
                             filter=filter,
                             spi3w_en=False)
@@ -508,6 +510,12 @@ class BME280:
                                osrs_p=pressureOversampling,
                                mode=mode)
 
+    def start(self, *args, **kwargs):
+        """Synchronously call the coroutine startAsync().
+        See startAsync() for documentation about behaviour, arguments and return value.
+        """
+        asyncio.run(self.startAsync(*args, **kwargs))
+
     async def readForcedAsync(self, *, pollSleep=0.05, **kwargs):
         """Trigger a MODE_FORCED conversion,
         wait for it to complete and return the same as read().
@@ -515,17 +523,18 @@ class BME280:
         """
         if not self.__bus:
             raise BME280Error("BME280: Device not opened.")
-        self.start(**kwargs, mode=MODE_FORCED)
-        while self.isMeasuring():
+        await self.startAsync(**kwargs, mode=MODE_FORCED)
+        while await self.isMeasuringAsync():
             await asyncio.sleep(pollSleep)
-        return self.read()
+        return await self.readAsync()
 
     def readForced(self, *args, **kwargs):
         """Synchronously call the coroutine readForcedAsync().
+        See readForcedAsync() for documentation about behaviour, arguments and return value.
         """
         return asyncio.run(self.readForcedAsync(*args, **kwargs))
 
-    def isMeasuring(self):
+    async def isMeasuringAsync(self):
         """Returns True, if the device is currently running the measurement cycle.
         In MODE_FORCED: If this returns False, it's Ok to read() the new data.
         """
@@ -534,7 +543,13 @@ class BME280:
         im_update, measuring = self.__read_status()
         return measuring
 
-    def read(self):
+    def isMeasuring(self):
+        """Synchronously call the coroutine isMeasuringAsync().
+        See isMeasuringAsync() for documentation about behaviour, arguments and return value.
+        """
+        return asyncio.run(self.isMeasuringAsync())
+
+    async def readAsync(self):
         """Read the temperature, humidity and pressure from the device.
         Returns a tuple (temperature, humidity, pressure).
         temparature in degree Celsius.
@@ -569,6 +584,12 @@ class BME280:
         p = self.__compP(t_fine, up)
 
         return t, h, p
+
+    def read(self):
+        """Synchronously call the coroutine readAsync().
+        See readAsync() for documentation about behaviour, arguments and return value.
+        """
+        return asyncio.run(self.readAsync())
 
     def __compT(self, ut):
         """Convert the uncompensated temperature 'ut'
