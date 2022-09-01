@@ -70,14 +70,29 @@ class Test_I2CDummy(TestCase):
     @patch("bme280.bme280.isMicropython", False)
     @patch("smbus.SMBus", SMBusMock)
     def test_linux(self):
-        with bme280.BME280(i2cBus=42, calc=bme280.CALC_INT32) as bme:
+        with bme280.BME280(i2cBus=42) as bme:
             t, h, p = bme.readForced(filter=bme280.FILTER_4,
                                      tempOversampling=bme280.OVSMPL_4,
                                      humidityOversampling=bme280.OVSMPL_16,
                                      pressureOversampling=bme280.OVSMPL_4)
+
+        with bme280.BME280(i2cBus=42, calc=bme280.CALC_INT32) as bme:
+            t, h, p = bme.readForced()
             self.assertAlmostEqual(t, 27.099998, places=4)
             self.assertAlmostEqual(h, 0.451729, places=4)
             self.assertAlmostEqual(p, 98484.001160, places=1)
+
+        with bme280.BME280(i2cBus=42, calc=bme280.CALC_INT64) as bme:
+            t, h, p = bme.readForced()
+            self.assertAlmostEqual(t, 27.099998, places=4)
+            self.assertAlmostEqual(h, 0.451729, places=4)
+            self.assertAlmostEqual(p / 100, 984.84001160, places=1)
+
+        with bme280.BME280(i2cBus=42, calc=bme280.CALC_FLOAT) as bme:
+            t, h, p = bme.readForced()
+            self.assertAlmostEqual(t, 27.099998, places=1)
+            self.assertAlmostEqual(h, 0.451729, places=2)
+            self.assertAlmostEqual(p / 100, 984.84001160, places=1)
 
     @patch("bme280.bme280.isMicropython", True)
     @patch("machine.I2C", I2CMock, create=True)
@@ -103,5 +118,13 @@ class Test_I2CDummy(TestCase):
             async with bme280.BME280(i2cBus=42) as bme:
                 t, h, p = await bme.readForcedAsync()
         uasyncio.run(coroutine_())
+
+        # Normal mode
+        with bme280.BME280(i2cBus=42) as bme:
+            bme.start(mode=bme280.MODE_NORMAL,
+                      standbyTime=bme280.T_SB_10ms)
+            while bme.isMeasuring():
+                pass
+            t, h, p = bme.read()
 
 # vim: ts=4 sw=4 expandtab
