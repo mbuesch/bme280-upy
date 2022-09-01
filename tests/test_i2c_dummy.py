@@ -20,13 +20,11 @@ class SMBusMock:
         if reg == 0xD0 and length == 1: # id
             return [ 0x60, ]
         if reg == 0x88 and length == 26: # cal burst 1
-            return binascii.unhexlify("04719f673200198a4dd6d00bc419fafff9ff0c3020d18813004b")
+            return list(binascii.unhexlify("04719f673200198a4dd6d00bc419fafff9ff0c3020d18813004b"))
         if reg == 0xE1 and length == 7: # cal burst 2
-            return binascii.unhexlify("5a01001626031e")
+            return list(binascii.unhexlify("5a01001626031e"))
         if reg == 0xF7 and length == 8: # value burst
-            return [ 0x01, 0x02, 0x03,  # press
-                     0x74, 0x75, 0x76,  # temp
-                     0x18, 0x18, ]      # hum
+            return list(binascii.unhexlify("5e962085efc07bd2"))
         return [ 0, ] * length
 
 # machine.I2C
@@ -72,12 +70,14 @@ class Test_I2CDummy(TestCase):
     @patch("bme280.bme280.isMicropython", False)
     @patch("smbus.SMBus", SMBusMock)
     def test_linux(self):
-        with bme280.BME280(i2cBus=42) as bme:
+        with bme280.BME280(i2cBus=42, calc=bme280.CALC_INT32) as bme:
             t, h, p = bme.readForced(filter=bme280.FILTER_4,
                                      tempOversampling=bme280.OVSMPL_4,
                                      humidityOversampling=bme280.OVSMPL_16,
                                      pressureOversampling=bme280.OVSMPL_4)
-            #TODO
+            self.assertAlmostEqual(t, 27.099998, places=4)
+            self.assertAlmostEqual(h, 0.451729, places=4)
+            self.assertAlmostEqual(p, 98484.001160, places=1)
 
     @patch("bme280.bme280.isMicropython", True)
     @patch("machine.I2C", I2CMock, create=True)

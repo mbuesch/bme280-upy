@@ -24,9 +24,7 @@ class SpiDevMock:
         if reg == 0xE1 and length == 7 + 1: # cal burst 2
             return b'\0' + binascii.unhexlify("5a01001626031e")
         if reg == 0xF7 and length == 8 + 1: # value burst
-            return b'\0' + bytes([ 0x01, 0x02, 0x03,  # press
-                                   0x74, 0x75, 0x76,  # temp
-                                   0x18, 0x18, ])     # hum
+            return b'\0' + binascii.unhexlify("5e962085efc07bd2")
         return bytes([ 0, ] * length)
 
 # machine.SPI
@@ -98,12 +96,14 @@ class Test_SPIDummy(TestCase):
     @patch("bme280.bme280.isMicropython", False)
     @patch("spidev.SpiDev", SpiDevMock)
     def test_linux(self):
-        with bme280.BME280(spiBus=42, spiCS=2) as bme:
+        with bme280.BME280(spiBus=42, spiCS=2, calc=bme280.CALC_INT32) as bme:
             t, h, p = bme.readForced(filter=bme280.FILTER_4,
                                      tempOversampling=bme280.OVSMPL_4,
                                      humidityOversampling=bme280.OVSMPL_16,
                                      pressureOversampling=bme280.OVSMPL_4)
-            #TODO
+            self.assertAlmostEqual(t, 27.099998, places=4)
+            self.assertAlmostEqual(h, 0.451729, places=4)
+            self.assertAlmostEqual(p, 98484.001160, places=1)
 
     @patch("bme280.bme280.isMicropython", True)
     @patch("machine.SPI", SPIMock, create=True)
