@@ -103,7 +103,11 @@ See the datasheet for more information about normal mode.
         with bme280.BME280(i2cBus=0) as bme:
             # Start in normal mode with specified measurement interval (standby time).
             bme.start(mode=bme280.MODE_NORMAL,
-                      standbyTime=bme280.T_SB_10ms)
+                      standbyTime=bme280.T_SB_10ms,
+                      filter=bme280.FILTER_2,
+                      tempOversampling=bme280.OVSMPL_4,
+                      humidityOversampling=bme280.OVSMPL_4,
+                      pressureOversampling=bme280.OVSMPL_4)
 
             while True:
                 # Read the most recent values from the device.
