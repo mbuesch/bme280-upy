@@ -75,6 +75,7 @@ class Test_I2CDummy(TestCase):
                                      tempOversampling=bme280.OVSMPL_4,
                                      humidityOversampling=bme280.OVSMPL_16,
                                      pressureOversampling=bme280.OVSMPL_4)
+            self.assertTrue(t > 0 and h > 0 and p > 0)
 
         with bme280.BME280(i2cBus=42, calc=bme280.CALC_INT32) as bme:
             t, h, p = bme.readForced()
@@ -101,30 +102,39 @@ class Test_I2CDummy(TestCase):
     def test_micropython(self):
         with bme280.BME280(i2cBus=42) as bme:
             t, h, p = bme.readForced()
+            self.assertTrue(t > 0 and h > 0 and p > 0)
         with bme280.BME280(i2cBus={ "index": 42, "scl": 11, "sda": 12 }) as bme:
             t, h, p = bme.readForced()
+            self.assertTrue(t > 0 and h > 0 and p > 0)
         with bme280.BME280(i2cBus={ "scl": 11, "sda": 12 }) as bme:
             t, h, p = bme.readForced()
+            self.assertTrue(t > 0 and h > 0 and p > 0)
         with bme280.BME280(i2cBus=machine.I2C(42, scl=11, sda=12, freq=100000)) as bme:
             t, h, p = bme.readForced()
+            self.assertTrue(t > 0 and h > 0 and p > 0)
         with bme280.BME280(i2cBus=machine.I2C(42,
                                               scl=machine.Pin(11, mode=machine.Pin.OPEN_DRAIN, value=1),
                                               sda=machine.Pin(12, mode=machine.Pin.OPEN_DRAIN, value=1),
                                               freq=100000)) as bme:
             t, h, p = bme.readForced()
+            self.assertTrue(t > 0 and h > 0 and p > 0)
 
         # Test async
         async def coroutine_():
             async with bme280.BME280(i2cBus=42) as bme:
                 t, h, p = await bme.readForcedAsync()
+                self.assertTrue(t > 0 and h > 0 and p > 0)
         uasyncio.run(coroutine_())
 
         # Normal mode
         with bme280.BME280(i2cBus=42) as bme:
             bme.start(mode=bme280.MODE_NORMAL,
                       standbyTime=bme280.T_SB_10ms)
-            while bme.isMeasuring():
-                pass
-            t, h, p = bme.read()
+
+        # Other methods
+        with bme280.BME280(i2cBus=42) as bme:
+            bme.readForced()
+            self.assertFalse(bme.isMeasuring())
+            bme.reset()
 
 # vim: ts=4 sw=4 expandtab

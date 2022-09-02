@@ -101,6 +101,7 @@ class Test_SPIDummy(TestCase):
                                      tempOversampling=bme280.OVSMPL_4,
                                      humidityOversampling=bme280.OVSMPL_16,
                                      pressureOversampling=bme280.OVSMPL_4)
+            self.assertTrue(t > 0 and h > 0 and p > 0)
 
         with bme280.BME280(spiBus=42, spiCS=2, calc=bme280.CALC_INT32) as bme:
             t, h, p = bme.readForced()
@@ -127,31 +128,40 @@ class Test_SPIDummy(TestCase):
     def test_micropython(self):
         with bme280.BME280(spiBus=42, spiCS=2) as bme:
             t, h, p = bme.readForced()
+            self.assertTrue(t > 0 and h > 0 and p > 0)
         with bme280.BME280(spiBus={ "index": 42, "sck": 21, "mosi": 22, "miso": 23 }, spiCS=2) as bme:
             t, h, p = bme.readForced()
+            self.assertTrue(t > 0 and h > 0 and p > 0)
         with bme280.BME280(spiBus={ "sck": 21, "mosi": 22, "miso": 23 }, spiCS=2) as bme:
             t, h, p = bme.readForced()
+            self.assertTrue(t > 0 and h > 0 and p > 0)
         with bme280.BME280(spiBus=machine.SPI(42, sck=21, mosi=22, miso=23), spiCS=2) as bme:
             t, h, p = bme.readForced()
+            self.assertTrue(t > 0 and h > 0 and p > 0)
         with bme280.BME280(spiBus=machine.SPI(42,
                                               sck=machine.Pin(21, mode=machine.Pin.OUT, value=0),
                                               mosi=machine.Pin(22, mode=machine.Pin.OUT, value=0),
                                               miso=machine.Pin(23, mode=machine.Pin.IN)),
                            spiCS=machine.Pin(2, mode=machine.Pin.OUT, value=1)) as bme:
             t, h, p = bme.readForced()
+            self.assertTrue(t > 0 and h > 0 and p > 0)
 
         # Test async
         async def coroutine_():
             async with bme280.BME280(spiBus=42, spiCS=2) as bme:
                 t, h, p = await bme.readForcedAsync()
+                self.assertTrue(t > 0 and h > 0 and p > 0)
         uasyncio.run(coroutine_())
 
         # Normal mode
         with bme280.BME280(spiBus=42, spiCS=2) as bme:
             bme.start(mode=bme280.MODE_NORMAL,
                       standbyTime=bme280.T_SB_10ms)
-            while bme.isMeasuring():
-                pass
-            t, h, p = bme.read()
+
+        # Other methods
+        with bme280.BME280(spiBus=42, spiCS=2) as bme:
+            bme.readForced()
+            self.assertFalse(bme.isMeasuring())
+            bme.reset()
 
 # vim: ts=4 sw=4 expandtab
