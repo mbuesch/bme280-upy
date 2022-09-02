@@ -19,6 +19,14 @@ hook_get_version()
 	version="$(grep 'version=' "$srcdir/setup.py" | head -n1 | cut -d'"' -f2)"
 }
 
+hook_regression_tests()
+{
+	default_hook_regression_tests "$@"
+
+	# Run selftests
+	sh "$1/tests/run.sh"
+}
+
 project=bme280-upy
 default_archives=py-sdist-xz
 makerelease "$@"
