@@ -10,7 +10,7 @@ with open(os.path.join(basedir, "README.md"), "rb") as fd:
 
 setup(
     name="bme280-upy",
-    version="1.1",
+    version="2.0.0",
     description="BME-280 sensor device driver with Micropython and Linux support (I2C + SPI)",
     license="GNU General Public License v2 or later",
     author="Michael Büsch",
