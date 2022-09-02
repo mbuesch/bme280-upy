@@ -17,7 +17,7 @@ setup(
     author_email="m@bues.ch",
     url="https://bues.ch/",
     packages=["bme280"],
-    keywords = "Micropython BME280 SPI I2C",
+    keywords = "Micropython BME280 SPI I2C Raspberry-Pi",
     classifiers = [
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
