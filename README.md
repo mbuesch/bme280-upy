@@ -92,6 +92,28 @@ The BME280 instance can also be used as Context Manager (Python `with` statement
     except bme280.BME280Error as e:
         print(f"BME280 error: {e}")
 
+# Example: Normal mode
+
+The driver also supports normal mode, where the bme280 does all measurements on its own in the background.
+See the datasheet for more information about normal mode.
+
+    import bme280
+
+    try:
+        with bme280.BME280(i2cBus=0) as bme:
+            # Start in normal mode with specified measurement interval (standby time).
+            bme.start(mode=bme280.MODE_NORMAL,
+                      standbyTime=bme280.T_SB_10ms)
+
+            while True:
+                # Read the most recent values from the device.
+                temperature, humidity, pressure = bme.read()
+
+                # ... do something else here and let the bme280 run measurements in the mean time.
+
+    except bme280.BME280Error as e:
+        print(f"BME280 error: {e}")
+
 # License
 
 Copyright (c) 2020-2022 Michael Büsch <m@bues.ch>
