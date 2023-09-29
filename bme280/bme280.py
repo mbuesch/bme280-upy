@@ -458,14 +458,17 @@ class BME280:
         self.__cache_config = None
         self.__cache_ctrl_hum = None
 
+        # Reset the chip.
         self.__write8(_REG_reset, 0xB6)
+
+        # Wait for the chip to come alive again.
         await asyncio.sleep(0.05)
         for _ in range(5):
             if self.__readU8(_REG_id) == 0x60:
                 break
             await asyncio.sleep(0.01)
         else:
-            raise BME280Error("BME280: ID register response incorrect.")
+            raise BME280Error("BME280: ID register response incorrect (1).")
         for _ in range(5):
             im_update, measuring = self.__read_status()
             if not im_update and not measuring:
@@ -473,7 +476,17 @@ class BME280:
             await asyncio.sleep(0.01)
         else:
             raise BME280Error("BME280: status register response incorrect.")
+
+        # Read the ID register a couple of times to test if
+        # the bus communication is stable.
+        # If this fails, then there probably is a bus problem.
+        for _ in range(10):
+            if self.__readU8(_REG_id) != 0x60:
+                raise BME280Error("BME280: ID register response incorrect (2).")
+
+        # Read calibration data.
         self.__readCal()
+
         self.__resetPending = False
 
     def reset(self):
