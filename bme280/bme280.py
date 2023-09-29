@@ -354,13 +354,13 @@ class BME280:
         'calc': Calculation mode for compensation functions. One of CALC_...
         """
         self.__calc = calc
+        self.__resetPending = True
         if i2cBus is not None:
             self.__bus = BME280I2C(i2cBus, i2cAddr, busFreq)
         elif spiBus is not None:
             self.__bus = BME280SPI(spiBus, spiCS, busFreq)
         else:
             raise BME280Error("BME280: No bus configured.")
-        self.__resetPending = True
 
     async def closeAsync(self):
         """Shutdown communication to the device.
@@ -370,6 +370,7 @@ class BME280:
                 await self.startAsync(mode=MODE_SLEEP)
             except BME280Error:
                 pass
+            self.__resetPending = True
             self.__bus.close()
             self.__bus = None
         self.__resetPending = True
