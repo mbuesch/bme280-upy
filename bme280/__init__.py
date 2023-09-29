@@ -1,6 +1,6 @@
 #
 # BME280 device driver - Public interface
-# Copyright (c) 2020-2022 Michael Büsch <m@bues.ch>
+# Copyright (c) 2020-2023 Michael Büsch <m@bues.ch>
 #
 # The reference and base for this software is the public document
 #   BME280 - Data sheet

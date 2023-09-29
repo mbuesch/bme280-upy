@@ -120,7 +120,7 @@ See the datasheet for more information about normal mode.
 
 # License
 
-Copyright (c) 2020-2022 Michael Büsch <m@bues.ch>
+Copyright (c) 2020-2023 Michael Büsch <m@bues.ch>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
